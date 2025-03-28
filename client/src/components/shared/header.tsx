@@ -1,7 +1,8 @@
 import axiosClient from "@/api/axiosClient";
 import { cn } from "@/lib/utils";
 import useAuthStore from "@/store/authStore";
-import { LogOut } from "lucide-react";
+import { useModalStore } from "@/store/modalStore";
+import { ListPlus, LogOut } from "lucide-react";
 import React from "react";
 import { useNavigate } from "react-router";
 import { Button } from "../ui/button";
@@ -14,6 +15,7 @@ interface Props {
 export const Header: React.FC<Props> = ({ className }) => {
   const navigate = useNavigate();
   const { logout } = useAuthStore();
+  const { openModal } = useModalStore();
   const logoutHandler = async () => {
     try {
       await axiosClient.post("/api/logout");
@@ -24,9 +26,12 @@ export const Header: React.FC<Props> = ({ className }) => {
     }
   };
   return (
-    <header className={cn("py-6 border-b" , className)}>
+    <header className={cn("py-6 border-b", className)}>
       <Container>
-        <div className="flex justify-end w-full">
+        <div className="flex justify-end w-full gap-2">
+          <Button variant="outline" size="icon" onClick={() => openModal()}>
+            <ListPlus />
+          </Button>
           <Button variant="outline" size="icon" onClick={logoutHandler}>
             <LogOut />
           </Button>

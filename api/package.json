@@ -5,6 +5,9 @@
   "scripts": {
     "start": "ts-node-dev --respawn --transpile-only --exit-child -r tsconfig-paths/register server.ts"
   },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

@@ -103,4 +103,20 @@ export const TaskController = {
       res.status(500).json({ message: "Ошибка сервера" });
     }
   },
+
+  getTaskById: async (req: AuthRequest, res: Response): Promise<any> => {
+    const taskId = req.params.id;
+    const userId = req.user?.userId;
+
+    try {
+      const task = await prisma.task.findUnique({
+        where: { id: taskId },
+        include: { assignee: true, creator: true },
+      });
+
+      if (task && (task.creatorId !== userId || task.assigneeId !== userId)) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+    } catch (e) {}
+  },
 };

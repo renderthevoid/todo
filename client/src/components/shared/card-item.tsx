@@ -1,42 +1,60 @@
+import { useModalStore } from "@/store/modalStore";
+import { Task } from "@/types";
+import { Pencil } from "lucide-react";
 import React from "react";
+import { Button } from "../ui/button";
 
 interface Props {
   className?: string;
   task: Task;
 }
-interface Task {
-  id: string;
-  title: string;
-  priority: "low" | "medium" | "high";
-  dueDate: string;
-  assignee: string;
-  status: "todo" | "in-progress" | "completed";
-}
 
-const priorityMap = {
+const priorityColorMap = {
   low: "bg-green-500",
   medium: "bg-yellow-500",
   high: "bg-red-500",
-  cancelled: "bg-gray-500",
+  canceled: "bg-gray-300",
+};
+
+const statusColorMap = {
+  todo: "bg-gray-500",
+  in_progress: "bg-blue-500",
+  done: "bg-green-500",
+  canceled: "bg-gray-300",
 };
 
 const statusMap = {
-  todo: "bg-gray-500",
-  "in-progress": "bg-blue-500",
-  completed: "bg-green-500",
-  cancelled: "bg-gray-500",
+  todo: "В ожидании",
+  in_progress: "В процессе",
+  done: "Завершено",
+  canceled: "Отменено",
+};
+
+const priorityMap = {
+  low: "Низкий",
+  medium: "Средний",
+  high: "Высокий",
+  cancelled: "Отменено",
 };
 export const CardItem: React.FC<Props> = ({ task }) => {
+  
+  const { openModal } = useModalStore();
   return (
     <div className="p-4 border rounded-lg shadow-md bg-white">
       <div className="flex justify-between w-full items-center gap-1.5 flex-wrap">
         <h3 className="text-lg font-semibold text-gray-800">{task.title}</h3>
         <span
           className={`text-white text-xs font-bold px-2 py-1 rounded-full ${
-            priorityMap[task.priority]
+            priorityColorMap[
+              task.priority.toLocaleLowerCase() as keyof typeof priorityColorMap
+            ]
           }`}
         >
-          {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+          {
+            priorityMap[
+              task.priority.toLocaleLowerCase() as keyof typeof priorityMap
+            ]
+          }
         </span>
       </div>
 
@@ -53,22 +71,28 @@ export const CardItem: React.FC<Props> = ({ task }) => {
         <span className="text-sm font-medium text-gray-600">
           Ответственный:
         </span>
-        <span className="ml-2 text-gray-700">{task.assignee}</span>
+        <span className="ml-2 text-gray-700">
+          {task.assignee?.lastName} {task.assignee?.firstName}{" "}
+          {task.assignee?.middleName}
+        </span>
       </div>
 
       <div className="flex items-center mt-2">
         <span className="text-sm font-medium text-gray-600 mr-2">Статус:</span>
         <span
           className={`text-white text-xs font-bold px-2 py-1 rounded-full ${
-            statusMap[task.status]
+            statusColorMap[
+              task.status.toLocaleLowerCase() as keyof typeof statusColorMap
+            ]
           }`}
         >
-          {task.status === "todo"
-            ? "В ожидании"
-            : task.status === "in-progress"
-            ? "В процессе"
-            : "Завершено"}
+          {statusMap[task.status.toLocaleLowerCase() as keyof typeof statusMap]}
         </span>
+      </div>
+      <div className="flex justify-end">
+        <Button variant="outline" size="icon" onClick={() => openModal(task)}>
+          <Pencil />
+        </Button>
       </div>
     </div>
   );
