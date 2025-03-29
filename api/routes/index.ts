@@ -1,7 +1,7 @@
-import { User } from '@prisma/client';
-import { UserController, TaskController } from "@/controllers";
+import { TaskController, UserController } from "@/controllers";
+import { auth, taskAccess } from "@/middleware";
+
 import express from "express";
-import auth from '@/middleware/auth';
 
 const router = express.Router();
 
@@ -14,6 +14,7 @@ router.get("/users", UserController.getAllUsers);
 
 router.get("/tasks", auth, TaskController.getTasks);
 router.post("/createTask", auth, TaskController.createTask);
-
+router.get("/tasks/:id", auth, TaskController.getTaskById);
+router.put("/tasks/:id", auth, taskAccess, TaskController.updateTaskById);
 
 export default router;

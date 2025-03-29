@@ -4,7 +4,7 @@ import { Route, Routes } from "react-router";
 import { Toaster } from "sonner";
 import { TaskModal } from "./components/shared/task-modal";
 import { Index } from "./pages";
-import { Login } from "./pages/login";
+import { Login } from "./pages/loginOld";
 import { Register } from "./pages/register";
 import GuestRoute from "./routes/GuestRoute";
 import ProtectedRoute from "./routes/ProtectedRoute";

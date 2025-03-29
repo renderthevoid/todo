@@ -21,14 +21,15 @@ export interface Task {
 }
 
 export enum Priority {
-  LOW = 'LOW',
-  MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH',
+  LOW = "Низкий",
+  MEDIUM = "Средний",
+  HIGH = "Высокий",
 }
 
+// Статусы
 export enum Status {
-  TODO = 'TODO',
-  IN_PROGRESS = 'IN_PROGRESS',
-  DONE = 'DONE',
-  CANCELED = 'CANCELED',
+  TODO = "В ожидании",
+  IN_PROGRESS = "В процессе",
+  DONE = "Завершено",
+  CANCELED = "Отменено",
 }

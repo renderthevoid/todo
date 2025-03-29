@@ -1,17 +1,20 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
-interface User {
-  userId: number;
+interface UserPayload {
+  userId: string;
 }
 
-declare module "express" {
-  interface Request {
-    user?: User;
+declare global {
+  namespace Express {
+    interface Request {
+      user?: UserPayload;
+      taskAccess?: TaskAccess
+    }
   }
 }
 
-const auth = async (req: Request, res: Response, next: NextFunction) => {
+export const auth = (req: Request, res: Response, next: NextFunction) => {
   const headerToken = req.headers["authorization"];
   const accessToken = headerToken && headerToken.split(" ")[1];
   const refreshToken = req.cookies.refreshToken;
@@ -25,7 +28,7 @@ const auth = async (req: Request, res: Response, next: NextFunction) => {
       const decoded = jwt.verify(
         accessToken,
         process.env.ACCESS_SECRET_KEY!
-      ) as User;
+      ) as UserPayload;
       req.user = decoded;
       return next();
     }
@@ -37,7 +40,7 @@ const auth = async (req: Request, res: Response, next: NextFunction) => {
       const decodedRefresh = jwt.verify(
         refreshToken,
         process.env.REFRESH_SECRET_KEY!
-      ) as User;
+      ) as UserPayload;
       const newAccessToken = jwt.sign(
         { userId: decodedRefresh.userId },
         process.env.ACCESS_SECRET_KEY!,
@@ -50,9 +53,8 @@ const auth = async (req: Request, res: Response, next: NextFunction) => {
     } catch (refreshError) {
       return res
         .status(403)
+        .clearCookie("refreshToken")
         .json({ message: "Недействительный refresh token" });
     }
   }
 };
-
-export default auth;

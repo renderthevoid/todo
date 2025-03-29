@@ -190,7 +190,7 @@ export const Register: React.FC<Props> = ({ className }) => {
         </Button>
         <div className="flex items-center justify-center gap-1">
           <span>Уже есть аккаунт?</span>
-          <Button variant="link" className="p-0">
+          <Button variant="link" className="p-0" asChild>
             <Link to="/login">Войти</Link>
           </Button>
         </div>

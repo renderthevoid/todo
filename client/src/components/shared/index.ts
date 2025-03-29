@@ -1,3 +1,4 @@
+export { FiltersPanel } from './filters-panel';
 export { Container } from "./container";
 export { FormContainer } from "./form-container";
 export { Header } from "./header";

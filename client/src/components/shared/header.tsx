@@ -14,6 +14,7 @@ interface Props {
 
 export const Header: React.FC<Props> = ({ className }) => {
   const navigate = useNavigate();
+  const { userId } = useAuthStore();
   const { logout } = useAuthStore();
   const { openModal } = useModalStore();
   const logoutHandler = async () => {
@@ -29,6 +30,7 @@ export const Header: React.FC<Props> = ({ className }) => {
     <header className={cn("py-6 border-b", className)}>
       <Container>
         <div className="flex justify-end w-full gap-2">
+          {userId}
           <Button variant="outline" size="icon" onClick={() => openModal()}>
             <ListPlus />
           </Button>

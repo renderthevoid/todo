@@ -3,6 +3,12 @@ import prisma from "@/prisma/prisma-client";
 import { Task } from "@prisma/client";
 import { Response } from "express";
 
+const passwordOmit = {
+  omit: {
+    password: true,
+  },
+};
+
 export const TaskController = {
   getTasks: async (req: AuthRequest, res: Response): Promise<any> => {
     const { viewMode } = req.query;
@@ -18,7 +24,9 @@ export const TaskController = {
               OR: [{ creatorId: userId }, { assigneeId: userId }],
             },
             include: {
-              assignee: true,
+              assignee: {
+                ...passwordOmit,
+              },
             },
             orderBy: { updatedAt: "desc" },
           });
@@ -45,7 +53,11 @@ export const TaskController = {
           }
 
           tasks = await prisma.task.findMany({
-            include: { assignee: true },
+            include: {
+              assignee: {
+                ...passwordOmit,
+              },
+            },
             orderBy: { updatedAt: "desc" },
           });
 
@@ -64,7 +76,17 @@ export const TaskController = {
 
         default:
           tasks = await prisma.task.findMany({
-            include: { assignee: true, creator: true },
+            include: {
+              assignee: {
+                ...passwordOmit,
+              },
+              creator: {
+                ...passwordOmit,
+                include: {
+                  subordinates: true,
+                },
+              },
+            },
             orderBy: { updatedAt: "desc" },
           });
           return res.json(tasks);
@@ -76,14 +98,11 @@ export const TaskController = {
   },
 
   createTask: async (req: AuthRequest, res: Response): Promise<any> => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Неавторизованный пользователь" });
+    }
     try {
       const { title, description, dueDate, priority, assigneeId } = req.body;
-
-      if (!req.user) {
-        return res
-          .status(401)
-          .json({ message: "Неавторизованный пользователь" });
-      }
 
       const task = await prisma.task.create({
         data: {
@@ -111,12 +130,77 @@ export const TaskController = {
     try {
       const task = await prisma.task.findUnique({
         where: { id: taskId },
-        include: { assignee: true, creator: true },
+        include: {
+          assignee: {
+            ...passwordOmit,
+          },
+          creator: {
+            ...passwordOmit,
+          },
+        },
       });
 
       if (task && (task.creatorId !== userId || task.assigneeId !== userId)) {
         return res.status(403).json({ error: "Access denied" });
       }
-    } catch (e) {}
+    } catch (e) {
+      console.error("Ошибка при получении задачи:", e);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  },
+
+  updateTaskById: async (req: AuthRequest, res: Response): Promise<any> => {
+    const taskId = req.params.id;
+    const { title, description, dueDate, priority, status, assigneeId } =
+      req.body;
+    const { taskAccess } = req;
+
+    try {
+      const task = await prisma.task.findUnique({
+        where: { id: taskId },
+        select: { id: true },
+      });
+
+      if (!task) {
+        return res.status(404).json({ error: "Task not found" });
+      }
+
+      let updateData: Partial<Task> = {};
+
+      if (taskAccess?.allowOnlyStatus) {
+        if (Object.keys(req.body).some((key) => key !== "status")) {
+          return res.status(403).json({
+            error: "You can only change the task status",
+          });
+        }
+        updateData = { status: status };
+      } else {
+        updateData = {
+          title: title,
+          description: description,
+          dueDate: dueDate ? new Date(dueDate) : undefined,
+          priority: priority,
+          status: status,
+          ...(assigneeId && { assigneeId: assigneeId }),
+        };
+      }
+
+      const updatedTask = await prisma.task.update({
+        where: { id: taskId },
+        data: updateData,
+        include: {
+          creator: passwordOmit,
+          assignee: passwordOmit,
+        },
+      });
+
+      return res.status(200).json({ task: updatedTask });
+    } catch (error) {
+      console.error("Error updating task:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error",
+      });
+    }
   },
 };
