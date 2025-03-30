@@ -10,6 +10,7 @@ router.post("/register", UserController.register);
 router.post("/login", UserController.login);
 router.post("/refresh-token", UserController.refreshToken);
 router.post("/logout", auth, UserController.logout);
+router.get("/available-users", auth, UserController.getAvailableUsers);
 router.get("/users", UserController.getAllUsers);
 
 router.get("/tasks", auth, TaskController.getTasks);

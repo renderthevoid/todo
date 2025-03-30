@@ -1,7 +1,9 @@
-import { User } from "@prisma/client";
+import { Role, User } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 
+import { AuthRequest } from "@/dto/authRequest.dto";
+import checkSubordinates from "@/lib/utils/checkSubordinates";
 import jwt from "jsonwebtoken";
 import prisma from "../prisma/prisma-client";
 
@@ -23,6 +25,19 @@ export const UserController = {
         return res.status(400).json({ message: "User already exists" });
       }
 
+      if (managerId) {
+        const manager = await prisma.user.findUnique({
+          where: { id: managerId },
+        });
+
+        if (manager && manager.role === Role.USER) {
+          await prisma.user.update({
+            where: { id: managerId },
+            data: { role: Role.MANAGER },
+          });
+        }
+      }
+
       const passwordHash = await bcrypt.hash(password, 10);
 
       const user: User = await prisma.user.create({
@@ -35,6 +50,7 @@ export const UserController = {
           managerId,
         },
       });
+
       const { password: hashedPassword, ...userWithoutPassword } = user;
       res.status(200).json(userWithoutPassword);
     } catch (error) {
@@ -86,7 +102,9 @@ export const UserController = {
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
-      res.status(200).json({ accessToken, userId: user.id });
+      res
+        .status(200)
+        .json({ accessToken, userId: user.id, userRole: user.role });
     } catch (error) {
       console.error("Ошибка при авторизации:", error);
       res.status(500).json({ message: "Internal server error" });
@@ -100,6 +118,41 @@ export const UserController = {
       res.status(200).json(usersWithoutPassword);
     } catch (error) {
       console.error("Ошибка при получении всех пользователей:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  },
+
+  getAvailableUsers: async (req: AuthRequest, res: Response): Promise<any> => {
+    try {
+      const currentUserId = req.user?.userId;
+
+      if (!currentUserId) {
+        return res.status(401).json({ message: "Не авторизован" });
+      }
+
+      const allUsers = await prisma.user.findMany({
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          middleName: true,
+          login: true,
+          role: true,
+          managerId: true,
+        },
+      });
+
+      const availableUsers = await Promise.all(
+        allUsers.map(async (user) => {
+          if (user.id === currentUserId) return null;
+          const isSubordinate = await checkSubordinates(currentUserId, user.id);
+          return isSubordinate ? user : null;
+        })
+      ).then((users) => users.filter(Boolean));
+
+      res.status(200).json(availableUsers);
+    } catch (error) {
+      console.error("Ошибка при получении доступных пользователей:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   },
@@ -120,7 +173,9 @@ export const UserController = {
         { expiresIn: "15m" }
       );
 
-      res.status(200).json({ accessToken: newAccessToken });
+      res.status(200).json({
+        accessToken: newAccessToken,
+      });
     } catch (error) {
       console.error("Ошибка при обновлении токена:", error);
       res.status(401).json({ message: "Invalid refresh token" });

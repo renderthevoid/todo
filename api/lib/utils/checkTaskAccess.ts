@@ -1,5 +1,5 @@
 import prisma from "@/prisma/prisma-client";
-import checkSupervisor from './checkSupervisor';
+import checkSubordinates from "./checkSubordinates";
 
 export async function checkTaskAccess(
   userId: string,
@@ -16,7 +16,7 @@ export async function checkTaskAccess(
     return { canEdit: true };
   }
 
-  const isSupervisor = await checkSupervisor(userId, task.creatorId);
+  const isSupervisor = await checkSubordinates(userId, task.creatorId);
   if (isSupervisor) {
     return { canEdit: true, allowOnlyStatus: true };
   }

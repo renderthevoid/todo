@@ -1,6 +1,8 @@
 import { AuthRequest } from "@/dto/authRequest.dto";
+import { TaskWithUsers } from "@/dto/task.dto";
+import checkSubordinates from "@/lib/utils/checkSubordinates";
 import prisma from "@/prisma/prisma-client";
-import { Task } from "@prisma/client";
+import { Role, Task } from "@prisma/client";
 import { Response } from "express";
 
 const passwordOmit = {
@@ -15,16 +17,19 @@ export const TaskController = {
     const userId = req.user?.userId;
 
     try {
-      let tasks: Task[] = [];
+      let tasks: TaskWithUsers[] = [];
 
       switch (viewMode) {
         case "byDueDate":
           tasks = await prisma.task.findMany({
             where: {
-              OR: [{ creatorId: userId }, { assigneeId: userId }],
+              assigneeId: userId,
             },
             include: {
               assignee: {
+                ...passwordOmit,
+              },
+              creator: {
                 ...passwordOmit,
               },
             },
@@ -47,8 +52,10 @@ export const TaskController = {
           return res.json(groupedByDueDate);
 
         case "byAssignee":
-          const user = await prisma.user.findUnique({ where: { id: userId } });
-          if (user?.role !== "MANAGER") {
+          const user = await prisma.user.findUnique({
+            where: { id: userId },
+          });
+          if (user?.role !== Role.MANAGER) {
             return res.status(403).json({ error: "Access denied" });
           }
 
@@ -57,17 +64,36 @@ export const TaskController = {
               assignee: {
                 ...passwordOmit,
               },
+              creator: {
+                ...passwordOmit,
+              },
             },
             orderBy: { updatedAt: "desc" },
           });
 
-          const groupedByAssignee = tasks.reduce<Record<string, typeof tasks>>(
-            (acc, task) => {
-              const assigneeName = task.assignee
+          const subordinateTasks = await Promise.all(
+            tasks.map(async (task) => {
+              if (!task.assignee) {
+                return null;
+              }
+              const isSubordinate = await checkSubordinates(
+                userId ?? "",
+                task.assignee.id
+              );
+              return isSubordinate ? task : null;
+            })
+          ).then((tasks) => tasks.filter(Boolean));
+
+          const groupedByAssignee = subordinateTasks.reduce(
+            (acc: Record<string, typeof tasks>, task) => {
+              const assigneeName = task?.assignee
                 ? `${task.assignee.firstName} ${task.assignee.lastName}`
                 : "Unassigned";
-              if (!acc[assigneeName]) acc[assigneeName] = [];
-              acc[assigneeName].push(task);
+
+              if (!acc[assigneeName]) {
+                acc[assigneeName] = [];
+              }
+              acc[assigneeName].push(task!);
               return acc;
             },
             {}
