@@ -13,7 +13,6 @@ interface Props {
 }
 
 export const Header: React.FC<Props> = ({ className }) => {
-  const navigate = useNavigate();
   const { userId } = useAuthStore();
   const { logout } = useAuthStore();
   const { openModal } = useModalStore();
@@ -21,7 +20,7 @@ export const Header: React.FC<Props> = ({ className }) => {
     try {
       await axiosClient.post("/api/logout");
       logout();
-      navigate("/login");
+      window.location.href = "/login"
     } catch (error) {
       console.error("Ошибка при выходе:", error);
     }

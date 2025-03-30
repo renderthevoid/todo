@@ -1,5 +1,6 @@
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
+import useAuthStore from "@/store/authStore";
 import { useTasksStore } from "@/store/tasksStore";
 import { Calendar1, RotateCcw, UserRoundSearch } from "lucide-react";
 import React from "react";
@@ -12,6 +13,7 @@ interface Props {
 export const FiltersPanel: React.FC<Props> = ({ className }) => {
   const [groupValue, setGroupValue] = React.useState<string>("");
   const { setNeedRefresh, setQuery } = useTasksStore();
+  const { userRole } = useAuthStore();
 
   const updateValue = (value: string | null) => {
     if (value) {
@@ -23,8 +25,8 @@ export const FiltersPanel: React.FC<Props> = ({ className }) => {
 
   const resetValue = () => {
     setGroupValue("");
-		setQuery({ viewMode: "" });
-		setNeedRefresh(true);
+    setQuery({ viewMode: "" });
+    setNeedRefresh(true);
   };
 
   return (
@@ -42,7 +44,9 @@ export const FiltersPanel: React.FC<Props> = ({ className }) => {
         <ToggleGroupItem
           value="byAssignee"
           aria-label="Toggle byAssignee"
-          className="h-10 w-10 cursor-pointer"
+          className={`h-10 w-10 cursor-pointer ${
+            userRole === "USER" ? "hidden" : ""
+          }`}
         >
           <UserRoundSearch />
         </ToggleGroupItem>

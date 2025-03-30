@@ -2,105 +2,123 @@ import axiosClient from "@/api/axiosClient";
 import { FormContainer, SelectItems } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
+import { User } from "@/types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import axios, { AxiosError } from "axios";
+import React, { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
-
-import { Label } from "@/components/ui/label";
-import React, { useEffect, useState } from "react";
 import { z } from "zod";
 
 interface Props {
   className?: string;
 }
+
+interface RegisterErrorResponse {
+  message: string;
+}
+
 const initialFormState = {
   login: "",
   password: "",
   middleName: "",
   firstName: "",
   lastName: "",
+  managerId: "",
 };
+
 const formDataSchema = z.object({
-  password: z.string().min(3, { message: "Обязательное поле" }),
-  login: z.string().min(3, { message: "Обязательное поле" }),
-  firstName: z.string().min(2, { message: "Обязательное поле" }),
-  middleName: z.string().min(3, { message: "Обязательное поле" }),
-  lastName: z.string().min(3, { message: "Обязательное поле" }),
+  password: z
+    .string()
+    .min(3, { message: "Поле должно содержать не менее 3 символов" }),
+  login: z
+    .string()
+    .min(3, { message: "Поле должно содержать не менее 3 символов" }),
+  firstName: z
+    .string()
+    .min(2, { message: "Поле должно содержать не менее 2 символов" }),
+  middleName: z
+    .string()
+    .min(3, { message: "Поле должно содержать не менее 3 символов" }),
+  lastName: z
+    .string()
+    .min(3, { message: "Поле должно содержать не менее 3 символов" }),
+  managerId: z
+    .string()
+    .optional()
 });
+
+type FormData = z.infer<typeof formDataSchema>;
 
 export const Register: React.FC<Props> = ({ className }) => {
   const navigate = useNavigate();
+  const [users, setUsers] = useState<User[]>([]);
 
-  const [userFormData, setFormData] = useState<Partial<FormData>>({});
-  const [showErrors, setShowErrors] = useState(false);
-  const [users, setUsers] = useState([]);
-  const [selectedManager, setSelectedManager] = useState<string | null>(null);
-
-  const formData = {
-    ...initialFormState,
-    ...userFormData,
-    managerId: selectedManager,
-  };
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<FormData>({
+    resolver: zodResolver(formDataSchema),
+    defaultValues: { ...initialFormState },
+  });
 
   const fetchAllUsers = async () => {
-    const res = await axiosClient.get("/api/users");
-    setUsers(res.data);
+    try {
+      const res = await axiosClient.get("/api/users");
+      setUsers(res.data);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
   };
 
   useEffect(() => {
-    try {
-      fetchAllUsers();
-    } catch (error) {
-      console.error(error);
-    }
+    fetchAllUsers();
   }, []);
 
-  const validate = () => {
-    const res = formDataSchema.safeParse(formData);
-    if (res.success) {
-      return undefined;
-    }
-    return res.error.format();
-  };
-
-  const errors = showErrors ? validate() : undefined;
-
-  const updateInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value: inputValue } = e.target;
-    setFormData((prevValue) => ({
-      ...prevValue,
-      [name]: inputValue,
-    }));
-  };
-
-  const formHandler = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const isErrors = validate();
-
-    if (isErrors) {
-      setShowErrors(true);
-      return;
-    }
+  const formSubmitHandler = async (data: FormData) => {
     try {
-      const response = await axiosClient.post("/api/register", formData);
+      const payload = {
+        ...data,
+        managerId: data.managerId || null, 
+      };
+      const response = await axiosClient.post("/api/register", payload);
       if (response.status === 200) {
-        toast.success("Регистрация прошла успешно", {
-          className: "p-2 rounded-lg bg-green-500 text-white",
-          duration: 5000,
-        });
+        showToast("Регистрация прошла успешно", "success");
         navigate("/login");
       }
     } catch (error) {
-      console.error("Ошибка при авторизации:", error);
-      toast.error("Ошибка регистрации", {
-        className: "p-2 rounded-lg bg-green-500 text-white",
-        duration: 5000,
-      });
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<RegisterErrorResponse>;
+
+        if (axiosError.response?.data) {
+          const { message } = axiosError.response.data;
+          showToast(message || "Ошибка регистрации", "error");
+        } else {
+          showToast("Ошибка соединения с сервером", "error");
+        }
+      } else {
+        showToast("Неизвестная ошибка", "error");
+      }
     }
   };
+
+  const showToast = (message: string, type: "success" | "error" = "error") => {
+    toast[type](message, {
+      className: `p-2 rounded-lg ${
+        type === "success" ? "bg-green-500" : "bg-red-500"
+      } text-white`,
+      duration: 5000,
+    });
+  };
+
   return (
-    <div className={cn(className)}>
-      <FormContainer submit={(e) => formHandler(e)}>
+    <div className={className}>
+      <FormContainer submit={handleSubmit(formSubmitHandler)}>
         <h1 className="text-lg text-center">Регистрация</h1>
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
@@ -108,70 +126,70 @@ export const Register: React.FC<Props> = ({ className }) => {
             <Input
               id="lastName"
               type="text"
-              name="lastName"
-              value={formData.lastName}
-              onChange={updateInput}
+              {...register("lastName")}
               placeholder="Введите фамилию"
             />
-            <span className="text-red-500 text-sm">
-              {errors?.lastName?._errors.join(", ")}
-            </span>
+            {errors.lastName && (
+              <span className="text-red-500 text-sm">
+                {errors.lastName.message}
+              </span>
+            )}
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="firstName">Имя</Label>
             <Input
               id="firstName"
               type="text"
-              name="firstName"
-              value={formData.firstName}
-              onChange={updateInput}
+              {...register("firstName")}
               placeholder="Введите имя"
             />
-            <span className="text-red-500 text-sm">
-              {errors?.firstName?._errors.join(", ")}
-            </span>
+            {errors.firstName && (
+              <span className="text-red-500 text-sm">
+                {errors.firstName.message}
+              </span>
+            )}
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="middleName">Отчество</Label>
             <Input
               id="middleName"
               type="text"
-              name="middleName"
-              value={formData.middleName}
-              onChange={updateInput}
+              {...register("middleName")}
               placeholder="Введите отчество"
             />
-            <span className="text-red-500 text-sm">
-              {errors?.middleName?._errors.join(", ")}
-            </span>
+            {errors.middleName && (
+              <span className="text-red-500 text-sm">
+                {errors.middleName.message}
+              </span>
+            )}
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="login">Логин</Label>
             <Input
               id="login"
               type="text"
-              name="login"
-              value={formData.login}
-              onChange={updateInput}
+              {...register("login")}
               placeholder="Введите логин"
             />
-            <span className="text-red-500 text-sm">
-              {errors?.login?._errors.join(", ")}
-            </span>
+            {errors.login && (
+              <span className="text-red-500 text-sm">
+                {errors.login.message}
+              </span>
+            )}
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="password">Пароль</Label>
             <Input
               id="password"
               type="text"
-              name="password"
-              value={formData.password}
-              onChange={updateInput}
+              {...register("password")}
               placeholder="Введите пароль"
             />
-            <span className="text-red-500 text-sm">
-              {errors?.password?._errors.join(", ")}
-            </span>
+            {errors.password && (
+              <span className="text-red-500 text-sm">
+                {errors.password.message}
+              </span>
+            )}
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -181,8 +199,14 @@ export const Register: React.FC<Props> = ({ className }) => {
               title="Ваш руководитель"
               placeholder="Выберите руководителя"
               className="w-full"
-              onSelected={setSelectedManager}
-            ></SelectItems>
+              value={watch("managerId")}
+              onSelected={(value) => setValue("managerId", value)}
+              getLabel={(user) =>
+                `${user.lastName ?? ""} ${user.firstName ?? ""} ${
+                  user.middleName ?? ""
+                }`
+              }
+            />
           </div>
         </div>
         <Button type="submit" className="cursor-pointer">

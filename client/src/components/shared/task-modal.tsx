@@ -51,7 +51,7 @@ const taskSchema = z.object({
 
 type TaskSchema = z.infer<typeof taskSchema>;
 
-export const TaskModal: React.FC<Props> = ({ className }) => {
+export const TaskModal: React.FC<Props> = () => {
   const { isOpen, taskToEdit, closeModal } = useModalStore();
   const { setNeedRefresh } = useTasksStore();
   const { userId } = useAuthStore();
@@ -97,9 +97,10 @@ export const TaskModal: React.FC<Props> = ({ className }) => {
     }
   }, [isOpen, reset, taskToEdit]);
 
-  const fetchAllUsers = async () => {
+  const fetchAvailableUsers = async () => {
     try {
-      const res = await axiosClient.get("/api/users");
+      const res = await axiosClient.get("/api/available-users");
+      console.log(res);
       setUsers(res.data);
     } catch (error) {
       console.error(error);
@@ -107,8 +108,8 @@ export const TaskModal: React.FC<Props> = ({ className }) => {
   };
 
   useEffect(() => {
-    fetchAllUsers();
-  }, []);
+    fetchAvailableUsers();
+  }, [taskToEdit]);
 
   const onSubmit = async (data: TaskSchema) => {
     try {

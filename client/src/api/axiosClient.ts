@@ -36,9 +36,9 @@ axiosClient.interceptors.response.use(
           { withCredentials: true }
         );
 
-        const { accessToken } = response.data;
+        const { accessToken, userId, userRole } = response.data;
         const { login } = useAuthStore();
-        login(accessToken);
+        login(accessToken, userId, userRole);
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return axios(originalRequest);
       } catch (refreshError) {

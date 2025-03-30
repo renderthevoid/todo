@@ -4,7 +4,7 @@ import { Route, Routes } from "react-router";
 import { Toaster } from "sonner";
 import { TaskModal } from "./components/shared/task-modal";
 import { Index } from "./pages";
-import { Login } from "./pages/loginOld";
+import { LoginPage } from "./pages/login-page";
 import { Register } from "./pages/register";
 import GuestRoute from "./routes/GuestRoute";
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -14,11 +14,10 @@ function App() {
   return (
     <>
       {isAuth && <Header />}
-      <TaskModal />
       <Toaster />
       <Routes>
         <Route element={<GuestRoute />}>
-          <Route path="login" element={<Login />} />
+          <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<Register />} />
         </Route>
 
