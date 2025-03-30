@@ -1,7 +1,7 @@
-import axiosClient from "@/api/axiosClient";
-import useAuthStore from "@/store/authStore";
-import { useModalStore } from "@/store/modalStore";
-import { useTasksStore } from "@/store/tasksStore";
+import { TaskService } from "@/api/services";
+import { UserService } from "@/api/services/user.service";
+import { useAuthStore, useModalStore, useTasksStore } from "@/store";
+
 import { Priority, Status, User } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import React, { useEffect, useState } from "react";
@@ -99,9 +99,8 @@ export const TaskModal: React.FC<Props> = () => {
 
   const fetchAvailableUsers = async () => {
     try {
-      const res = await axiosClient.get("/api/available-users");
-      console.log(res);
-      setUsers(res.data);
+      const res = await UserService.getAvailableUsers();
+      setUsers(res);
     } catch (error) {
       console.error(error);
     }
@@ -114,11 +113,9 @@ export const TaskModal: React.FC<Props> = () => {
   const onSubmit = async (data: TaskSchema) => {
     try {
       if (taskToEdit) {
-        console.log("Редактирование задачи:", data);
-        await axiosClient.put(`/api/tasks/${taskToEdit.id}`, data);
+        await TaskService.update(taskToEdit.id, data);
       } else {
-        console.log("Создание новой задачи:", data);
-        await axiosClient.post("/api/createTask", data);
+        await TaskService.create(data);
       }
       setNeedRefresh(true);
       closeModal();

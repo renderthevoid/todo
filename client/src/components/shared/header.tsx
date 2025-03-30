@@ -1,10 +1,8 @@
-import axiosClient from "@/api/axiosClient";
+import { axiosClient } from "@/api/axios";
 import { cn } from "@/lib/utils";
-import useAuthStore from "@/store/authStore";
-import { useModalStore } from "@/store/modalStore";
+import { useAuthStore, useModalStore } from "@/store";;
 import { ListPlus, LogOut } from "lucide-react";
 import React from "react";
-import { useNavigate } from "react-router";
 import { Button } from "../ui/button";
 import { Container } from "./container";
 

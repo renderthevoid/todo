@@ -7,8 +7,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { Link } from "react-router";
-import { formDataSchema, initialFormState } from "./LoginForm.constants";
-import { useLoginForm } from "./LoginForm.hooks";
+import { formDataSchema, initialFormState } from "./schema";
+import { useLoginForm } from "./useLoginForm";
 
 interface LoginFormProps {
   className?: string;

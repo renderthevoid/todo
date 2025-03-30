@@ -10,7 +10,7 @@ interface IAuthStore {
   logout: () => void;
 }
 
-const useAuthStore = create<IAuthStore>()(
+export const useAuthStore = create<IAuthStore>()(
   persist(
     (set, get) => ({
       accessToken: null,
@@ -34,4 +34,3 @@ const useAuthStore = create<IAuthStore>()(
   )
 );
 
-export default useAuthStore;

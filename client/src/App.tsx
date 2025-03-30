@@ -1,11 +1,10 @@
 import { Header } from "@/components/shared/header";
-import useAuthStore from "@/store/authStore";
+import { useAuthStore } from "@/store";
 import { Route, Routes } from "react-router";
 import { Toaster } from "sonner";
-import { TaskModal } from "./components/shared/task-modal";
-import { Index } from "./pages";
+import { IndexPage } from "./pages";
 import { LoginPage } from "./pages/login-page";
-import { Register } from "./pages/register";
+import { RegisterPage } from "./pages/register-page";
 import GuestRoute from "./routes/GuestRoute";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
@@ -18,11 +17,11 @@ function App() {
       <Routes>
         <Route element={<GuestRoute />}>
           <Route path="login" element={<LoginPage />} />
-          <Route path="register" element={<Register />} />
+          <Route path="register" element={<RegisterPage />} />
         </Route>
 
         <Route element={<ProtectedRoute />}>
-          <Route index element={<Index />} />
+          <Route index element={<IndexPage />} />
         </Route>
       </Routes>
     </>

@@ -1,6 +1,6 @@
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
-import useAuthStore from "@/store/authStore";
+import { useAuthStore } from "@/store";
 import { useTasksStore } from "@/store/tasksStore";
 import { Calendar1, RotateCcw, UserRoundSearch } from "lucide-react";
 import React from "react";

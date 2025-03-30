@@ -1,5 +1,5 @@
-import useAuthStore from "@/store/authStore";
-import { useModalStore } from "@/store/modalStore";
+import { useAuthStore, useModalStore } from "@/store";
+
 import { Task } from "@/types";
 import { Pencil } from "lucide-react";
 import React from "react";
@@ -72,9 +72,7 @@ export const CardItem: React.FC<Props> = ({ task, isExpired, isEnded }) => {
         </div>
 
         <div className="mt-2">
-          <span className="text-sm font-medium text-gray-600">
-            Создатель:
-          </span>
+          <span className="text-sm font-medium text-gray-600">Создатель:</span>
           <span className="ml-2 text-gray-700">
             {task.creator?.lastName} {task.creator?.firstName}{" "}
             {task.creator?.middleName}
@@ -90,7 +88,6 @@ export const CardItem: React.FC<Props> = ({ task, isExpired, isEnded }) => {
             {task.assignee?.middleName}
           </span>
         </div>
-
 
         <div className="flex items-start justify-between mt-2">
           <div>

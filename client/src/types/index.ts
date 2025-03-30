@@ -26,10 +26,11 @@ export enum Priority {
   HIGH = "Высокий",
 }
 
-// Статусы
 export enum Status {
   TODO = "В ожидании",
   IN_PROGRESS = "В процессе",
   DONE = "Завершено",
   CANCELED = "Отменено",
 }
+
+export {}

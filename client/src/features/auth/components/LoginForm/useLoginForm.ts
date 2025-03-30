@@ -1,9 +1,9 @@
-import axiosClient from "@/api/axiosClient";
+import { AuthService } from "@/api/services";
 import {
   LoginErrorResponse,
   LoginFormData,
 } from "@/features/auth/types/auth.types";
-import useAuthStore from "@/store/authStore";
+import { useAuthStore } from "@/store";
 import axios, { AxiosError } from "axios";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -14,8 +14,7 @@ export const useLoginForm = () => {
 
   const handleLogin = async (data: LoginFormData) => {
     try {
-      const response = await axiosClient.post("/api/login", data);
-      const { accessToken, userId, userRole } = response.data;
+      const { accessToken, userId, userRole } = await AuthService.login(data);
       login(accessToken, userId, userRole);
       await navigate("/", { replace: true });
     } catch (error) {

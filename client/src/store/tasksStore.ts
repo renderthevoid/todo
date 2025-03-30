@@ -1,4 +1,4 @@
-import axiosClient from "@/api/axiosClient";
+import { axiosClient } from "@/api/axios";
 import { Task } from "@/types";
 import { create } from "zustand";
 
