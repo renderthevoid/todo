@@ -8,5 +8,7 @@ RUN yarn --frozen-lockfile
 
 COPY . .  
 
-# Запускаем dev-сервер
-CMD ["yarn", "dev"]
+
+EXPOSE 5173
+
+CMD ["yarn", "dev", "--host", "0.0.0.0"]

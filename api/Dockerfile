@@ -1,12 +1,16 @@
-FROM node:latest
+FROM node:20.13.1
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY package.json yarn.lock ./
+RUN yarn --frozen-lockfile
 
-RUN yarn
+COPY prisma ./prisma
+RUN npx prisma generate
 
 COPY . .
 
+EXPOSE 5000
 
 CMD ["yarn", "start"]
+

@@ -1,10 +1,9 @@
 import axios from "axios";
 import { requestInterceptor } from "./interceptors/request";
-import { errorInterceptor, responseInterceptor } from './interceptors/response';
-
+import { errorInterceptor, responseInterceptor } from "./interceptors/response";
 
 const axiosClient = axios.create({
-  baseURL: "http://localhost:3000",
+  baseURL: "http://localhost:5000",
   withCredentials: true,
 });
 

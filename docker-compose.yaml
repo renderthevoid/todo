@@ -17,11 +17,14 @@ services:
     build: ./client
     container_name: client
     ports:
-      - "3000:3000"
+      - "5173:5173"
+    volumes:
+      - ./client:/app  
     networks:
       - app-network
     depends_on:
       - api
+    command: yarn dev
   db:
     image: postgres:15
     container_name: db
